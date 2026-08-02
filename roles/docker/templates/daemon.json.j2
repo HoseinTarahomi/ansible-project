@@ -1,0 +1,11 @@
+{
+  "data-root": "{{ docker_data_root }}",
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "{{ docker_log_max_size }}",
+    "max-file": "{{ docker_log_max_file }}"
+  },
+  "registry-mirrors": [
+    "{{ docker_registry_mirror }}"
+  ]
+}

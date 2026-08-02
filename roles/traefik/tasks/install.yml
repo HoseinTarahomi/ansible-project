@@ -1,0 +1,24 @@
+---
+- name: Create Traefik directory
+  ansible.builtin.file:
+    path: "{{ traefik_dir }}"
+    state: directory
+    owner: "{{ traefik_user }}"
+    group: "{{ traefik_group }}"
+    mode: "0755"
+
+- name: Create Traefik dynamic directory
+  ansible.builtin.file:
+    path: "{{ traefik_dynamic_dir }}"
+    state: directory
+    owner: "{{ traefik_user }}"
+    group: "{{ traefik_group }}"
+    mode: "0755"
+
+- name: Create ACME file
+  ansible.builtin.file:
+    path: "{{ traefik_acme_file }}"
+    state: touch
+    owner: "{{ traefik_user }}"
+    group: "{{ traefik_group }}"
+    mode: "0600"

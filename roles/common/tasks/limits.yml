@@ -1,0 +1,8 @@
+---
+- name: Configure system limits
+  ansible.builtin.template:
+    src: limits.conf.j2
+    dest: /etc/security/limits.d/99-custom-limits.conf
+    owner: root
+    group: root
+    mode: "0644"

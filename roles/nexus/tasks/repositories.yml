@@ -1,0 +1,99 @@
+---
+- name: Get existing Nexus repositories
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ nexus_http_port }}/service/rest/v1/repositories"
+    method: GET
+    user: "{{ nexus_admin_user }}"
+    password: "{{ nexus_admin_password }}"
+    force_basic_auth: true
+    return_content: true
+    status_code: 200
+  register: nexus_repos
+
+- name: Set existing repository names
+  ansible.builtin.set_fact:
+    nexus_existing_repo_names: >-
+      {{ nexus_repos.json | map(attribute='name') | list }}
+
+- name: Configure Docker proxy repository
+  ansible.builtin.uri:
+    url: >-
+      http://127.0.0.1:{{ nexus_http_port }}/service/rest/v1/repositories/docker/proxy{% if nexus_repositories.docker_proxy.name in nexus_existing_repo_names %}/{{ nexus_repositories.docker_proxy.name }}{% endif %}
+    method: >-
+      {% if nexus_repositories.docker_proxy.name in nexus_existing_repo_names %}PUT{% else %}POST{% endif %}
+    user: "{{ nexus_admin_user }}"
+    password: "{{ nexus_admin_password }}"
+    force_basic_auth: true
+    status_code: 204,201
+    body_format: json
+    body:
+      name: "{{ nexus_repositories.docker_proxy.name }}"
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      docker:
+        v1Enabled: false
+        forceBasicAuth: false
+        httpPort: "{{ nexus_docker_proxy_port }}"
+      dockerProxy:
+        indexType: HUB
+      proxy:
+        remoteUrl: "{{ nexus_repositories.docker_proxy.remote_url }}"
+        contentMaxAge: 1440
+        metadataMaxAge: 1440
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: true
+
+- name: Configure Docker hosted repository
+  ansible.builtin.uri:
+    url: >-
+      http://127.0.0.1:{{ nexus_http_port }}/service/rest/v1/repositories/docker/hosted{% if nexus_repositories.docker_hosted.name in nexus_existing_repo_names %}/{{ nexus_repositories.docker_hosted.name }}{% endif %}
+    method: >-
+      {% if nexus_repositories.docker_hosted.name in nexus_existing_repo_names %}PUT{% else %}POST{% endif %}
+    user: "{{ nexus_admin_user }}"
+    password: "{{ nexus_admin_password }}"
+    force_basic_auth: true
+    status_code: 204,201
+    body_format: json
+    body:
+      name: "{{ nexus_repositories.docker_hosted.name }}"
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+        writePolicy: allow_once
+      docker:
+        v1Enabled: false
+        forceBasicAuth: false
+        httpPort: "{{ nexus_docker_hosted_port }}"
+
+- name: Configure Docker group repository
+  ansible.builtin.uri:
+    url: >-
+      http://127.0.0.1:{{ nexus_http_port }}/service/rest/v1/repositories/docker/group{% if nexus_repositories.docker_group.name in nexus_existing_repo_names %}/{{ nexus_repositories.docker_group.name }}{% endif %}
+    method: >-
+      {% if nexus_repositories.docker_group.name in nexus_existing_repo_names %}PUT{% else %}POST{% endif %}
+    user: "{{ nexus_admin_user }}"
+    password: "{{ nexus_admin_password }}"
+    force_basic_auth: true
+    status_code: 204,201
+    body_format: json
+    body:
+      name: "{{ nexus_repositories.docker_group.name }}"
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      group:
+        memberNames:
+          - "{{ nexus_repositories.docker_hosted.name }}"
+          - "{{ nexus_repositories.docker_proxy.name }}"
+      docker:
+        v1Enabled: false
+        forceBasicAuth: false
+        httpPort: "{{ nexus_docker_group_port }}"

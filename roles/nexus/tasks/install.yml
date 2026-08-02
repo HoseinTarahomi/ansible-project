@@ -1,0 +1,23 @@
+---
+- name: Create Nexus data directory
+  ansible.builtin.file:
+    path: "{{ nexus_data_dir }}"
+    state: directory
+    owner: "200"
+    group: "200"
+    mode: "0755"
+
+
+- name: Deploy Nexus docker compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ nexus_dir }}/docker-compose.yml"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Start Nexus container
+  community.docker.docker_compose_v2:
+    project_src: "{{ nexus_dir }}"
+    state: present
+    pull: always

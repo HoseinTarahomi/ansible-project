@@ -1,0 +1,136 @@
+---
+# ==========================
+# Traefik Image
+# ==========================
+
+traefik_version: "v3.6"
+
+traefik_image: "traefik:{{ traefik_version }}"
+
+traefik_container_name: "traefik"
+
+# ==========================
+# Directories
+# ==========================
+
+traefik_dir: "{{ docker_root_dir }}/traefik"
+
+traefik_dynamic_dir: "{{ traefik_dir }}/dynamic"
+
+traefik_acme_file: "{{ traefik_dir }}/acme.json"
+
+# ==========================
+# Network
+# ==========================
+
+traefik_network: "proxy"
+
+# ==========================
+# Ports
+# ==========================
+
+traefik_http_port: 80
+
+traefik_https_port: 443
+
+traefik_dashboard_port: 8080
+
+# ==========================
+# Dashboard
+# ==========================
+
+traefik_dashboard_enabled: true
+
+traefik_dashboard_insecure: true
+
+# ==========================
+# Health Check
+# ==========================
+
+traefik_healthcheck_url: "http://127.0.0.1:{{ traefik_dashboard_port }}/ping"
+
+traefik_healthcheck_status_code: 200
+
+traefik_healthcheck_retries: 30
+
+traefik_healthcheck_delay: 2
+
+# ==========================
+# Logging
+# ==========================
+
+traefik_log_level: "INFO"
+
+# ==========================
+# Docker
+# ==========================
+
+traefik_restart_policy: "unless-stopped"
+
+# ==========================
+# User / Group
+# ==========================
+
+traefik_user: root
+
+traefik_group: root
+
+# ==========================
+# Compose
+# ==========================
+
+traefik_compose_file: "{{ traefik_dir }}/docker-compose.yml"
+
+traefik_config_file: "{{ traefik_dir }}/traefik.yml"
+
+traefik_dynamic_middlewares_file: "{{ traefik_dynamic_dir }}/middlewares.yml"
+
+traefik_dynamic_tls_file: "{{ traefik_dynamic_dir }}/tls.yml"
+
+# ==========================
+# API
+# ==========================
+
+traefik_api_enabled: true
+
+traefik_api_dashboard: true
+
+traefik_api_insecure: true
+
+# ==========================
+# Providers
+# ==========================
+
+traefik_provider_docker: true
+
+traefik_provider_docker_exposedbydefault: false
+
+traefik_provider_file: true
+
+# ==========================
+# EntryPoints
+# ==========================
+
+traefik_entrypoint_http: web
+
+traefik_entrypoint_https: websecure
+
+# ==========================
+# Docker Socket
+# ==========================
+
+traefik_docker_socket: "/var/run/docker.sock"
+
+# ==========================
+# Docker Compose
+# ==========================
+
+traefik_container_restart: "{{ traefik_restart_policy }}"
+
+# ==========================
+# Let's Encrypt
+# ==========================
+
+traefik_acme_email: "YOUR_EMAIL@example.com"
+
+traefik_acme_storage: "{{ traefik_dir }}/acme.json"

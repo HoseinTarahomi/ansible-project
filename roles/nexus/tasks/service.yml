@@ -1,0 +1,11 @@
+---
+- name: Wait for Nexus service
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ nexus_http_port }}"
+    method: GET
+    status_code: 200
+    return_content: false
+  register: nexus_health
+  retries: 60
+  delay: 10
+  until: nexus_health.status == 200

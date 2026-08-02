@@ -1,0 +1,35 @@
+---
+# ==========================
+# Nexus Image
+# ==========================
+
+nexus_version: "latest"
+
+nexus_image: "sonatype/nexus3:{{ nexus_version }}"
+
+nexus_container_name: "nexus"
+
+nexus_restart_policy: "unless-stopped"
+
+
+# ==========================
+# Directories
+# ==========================
+
+nexus_dir: "{{ docker_root_dir }}/nexus"
+
+nexus_data_dir: "{{ nexus_dir }}/data"
+
+nexus_compose_file: "{{ nexus_dir }}/docker-compose.yml"
+
+# ==========================
+# Docker Network
+# ==========================
+
+nexus_network: "{{ docker_proxy_network }}"
+
+# ==========================
+# Environment
+# ==========================
+
+nexus_timezone: "{{ timezone }}"

@@ -1,0 +1,9 @@
+---
+- name: Configure kernel parameters
+  ansible.builtin.template:
+    src: sysctl.conf.j2
+    dest: /etc/sysctl.d/99-kubernetes.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload sysctl

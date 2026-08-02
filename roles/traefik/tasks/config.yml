@@ -1,0 +1,38 @@
+---
+- name: Copy Traefik configuration
+  ansible.builtin.template:
+    src: traefik.yml.j2
+    dest: "{{ traefik_config_file }}"
+    owner: "{{ traefik_user }}"
+    group: "{{ traefik_group }}"
+    mode: "0644"
+  notify: Restart Traefik
+
+- name: Copy Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ traefik_compose_file }}"
+    owner: "{{ traefik_user }}"
+    group: "{{ traefik_group }}"
+    mode: "0644"
+  notify: Restart Traefik
+
+- name: Create dynamic middlewares file
+  ansible.builtin.copy:
+    content: ""
+    dest: "{{ traefik_dynamic_middlewares_file }}"
+    owner: "{{ traefik_user }}"
+    group: "{{ traefik_group }}"
+    mode: "0644"
+
+- name: Create dynamic TLS file
+  ansible.builtin.copy:
+    content: |
+      tls:
+        certificates:
+          - certFile: /etc/letsencrypt/live/nexus.ht22.ir/fullchain.pem
+            keyFile: /etc/letsencrypt/live/nexus.ht22.ir/privkey.pem
+    dest: "{{ traefik_dynamic_tls_file }}"
+    owner: "{{ traefik_user }}"
+    group: "{{ traefik_group }}"
+    mode: "0644"

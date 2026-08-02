@@ -1,0 +1,5 @@
+
+- name: Check Nexus admin password file
+  ansible.builtin.stat:
+    path: "{{ nexus_data_dir }}/admin.password"
+  register: nexus_password_file

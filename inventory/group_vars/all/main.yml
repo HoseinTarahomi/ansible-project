@@ -1,0 +1,202 @@
+---
+# ==========================
+# System
+# ==========================
+
+hostname: ubuntu2
+timezone: Asia/Tehran
+locale: en_US.UTF-8
+
+# ==========================
+# Packages
+# ==========================
+
+common_packages:
+  - wget
+  - curl
+  - git
+  - vim
+  - unzip
+  - htop
+  - net-tools
+  - bash-completion
+  - ca-certificates
+  - gnupg
+  - lsb-release
+
+# ==========================
+# Docker
+# ==========================
+
+
+docker_packages:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-compose-plugin
+
+# ==========================
+# SSH
+# ==========================
+
+ssh_port: 22
+
+ssh_permit_root_login: "no"
+
+ssh_password_authentication: "yes"
+
+ssh_pubkey_authentication: "yes"
+
+
+# ==========================
+# Directories
+# ==========================
+
+docker_root_dir: /opt/docker
+
+
+nexus_dir: "{{ docker_root_dir }}/nexus"
+
+
+backup_dir: "{{ docker_root_dir }}/backups"
+
+
+# ==========================
+# Users
+# ==========================
+
+admin_user: ht22
+admin_groups:
+  - sudo
+
+
+# ==========================
+# Sudo
+# ==========================
+
+sudo_users:
+  - "{{ admin_user }}"
+
+
+
+# ==========================
+# SSH
+# ==========================
+
+ssh_public_key_path: "{{ lookup('env', 'HOME') }}/.ssh/id_ed25519.pub"
+
+
+# ==========================
+# Sysctl
+# ==========================
+
+sysctl_config:
+  net.ipv4.ip_forward: 1
+  net.bridge.bridge-nf-call-iptables: 1
+  net.bridge.bridge-nf-call-ip6tables: 1
+
+
+# ==========================
+# Limits
+# ==========================
+
+limits_config:
+  - domain: "*"
+    type: soft
+    item: nofile
+    value: 65536
+
+  - domain: "*"
+    type: hard
+    item: nofile
+    value: 65536
+
+  - domain: "*"
+    type: soft
+    item: nproc
+    value: 65536
+
+  - domain: "*"
+    type: hard
+    item: nproc
+    value: 65536
+
+
+# ==========================
+# Docker
+# ==========================
+
+docker_ubuntu_repo_codename: noble
+
+
+# ==========================
+# Docker Config
+# ==========================
+
+docker_data_root: /var/lib/docker
+
+docker_registry_mirror: "http://192.168.208.159:8084"
+
+docker_log_max_size: "100m"
+
+docker_log_max_file: "5"
+
+
+# ==========================
+# Nexus
+# ==========================
+
+nexus_image: "sonatype/nexus3:latest"
+
+nexus_container_name: "nexus"
+
+nexus_restart_policy: "unless-stopped"
+
+nexus_domain: "nexus.ht22.ir"
+
+nexus_network: "proxy"
+
+nexus_http_port: 8081
+
+nexus_docker_hosted_port: 8083
+
+nexus_docker_proxy_port: 8082
+
+nexus_docker_group_port: 8084
+
+# ==========================
+# Nexus Repository
+# ==========================
+
+nexus_admin_user: admin
+
+nexus_admin_password: "{{ vault_nexus_admin_password }}"
+
+nexus_repositories:
+
+  docker_proxy:
+    name: docker-proxy
+    remote_url: https://registry-1.docker.io
+
+  docker_hosted:
+    name: docker-hosted
+
+  docker_group:
+    name: docker-group
+
+
+# ==========================
+# Docker Networks
+# ==========================
+
+docker_networks:
+  - proxy
+
+docker_proxy_network: proxy
+
+# ==========================
+# Traefik / Let's Encrypt
+# ==========================
+
+traefik_acme_email: "ali.tohi9090@gmail.com"

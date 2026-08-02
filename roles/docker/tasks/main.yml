@@ -1,0 +1,25 @@
+---
+- ansible.builtin.import_tasks: install.yml
+  tags:
+    - docker
+    - docker_install
+
+- ansible.builtin.import_tasks: config.yml
+  tags:
+    - docker
+    - docker_config
+
+- ansible.builtin.import_tasks: service.yml
+  tags:
+    - docker
+    - docker_service
+
+- ansible.builtin.import_tasks: network.yml
+  tags:
+    - docker
+    - docker_network
+
+- ansible.builtin.import_tasks: users.yml
+  tags:
+    - docker
+    - docker_users

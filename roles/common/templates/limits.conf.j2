@@ -1,0 +1,5 @@
+# Managed by Ansible
+
+{% for limit in limits_config %}
+{{ limit.domain }} {{ limit.type }} {{ limit.item }} {{ limit.value }}
+{% endfor %}

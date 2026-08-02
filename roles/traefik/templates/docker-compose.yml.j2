@@ -1,0 +1,28 @@
+services:
+  {{ traefik_container_name }}:
+    image: "{{ traefik_image }}"
+    container_name: "{{ traefik_container_name }}"
+
+    restart: "{{ traefik_container_restart }}"
+
+    ports:
+      - "{{ traefik_http_port }}:80"
+      - "{{ traefik_https_port }}:443"
+      - "{{ traefik_dashboard_port }}:8080"
+
+    volumes:
+      - "{{ traefik_config_file }}:/etc/traefik/traefik.yml:ro"
+      - "{{ traefik_dynamic_dir }}:/etc/traefik/dynamic:ro"
+      - "{{ traefik_acme_file }}:/etc/traefik/acme.json"
+      - "{{ traefik_docker_socket }}:/var/run/docker.sock:ro"
+      - "/etc/letsencrypt:/etc/letsencrypt:ro"
+
+    environment:
+      TZ: "{{ timezone }}"
+
+    networks:
+      - "{{ traefik_network }}"
+
+networks:
+  "{{ traefik_network }}":
+    external: true

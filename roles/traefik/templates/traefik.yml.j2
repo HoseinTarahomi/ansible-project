@@ -1,0 +1,36 @@
+api:
+  dashboard: {{ traefik_api_dashboard | bool | lower }}
+  insecure: {{ traefik_api_insecure | bool | lower }}
+
+ping: {}
+
+log:
+  level: "{{ traefik_log_level }}"
+
+accessLog: {}
+
+entryPoints:
+  {{ traefik_entrypoint_http }}:
+    address: ":80"
+
+  {{ traefik_entrypoint_https }}:
+    address: ":443"
+
+  traefik:
+    address: ":8080"
+
+providers:
+  docker:
+    exposedByDefault: {{ traefik_provider_docker_exposedbydefault | bool | lower }}
+
+  file:
+    directory: "/etc/traefik/dynamic"
+    watch: true
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: "{{ traefik_acme_email }}"
+      storage: "/etc/traefik/acme.json"
+      httpChallenge:
+        entryPoint: {{ traefik_entrypoint_http }}

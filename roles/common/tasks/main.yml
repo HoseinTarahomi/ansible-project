@@ -1,0 +1,22 @@
+
+- import_tasks: packages.yml
+
+- import_tasks: hostname.yml
+
+- import_tasks: timezone.yml
+
+- ansible.builtin.import_tasks: directories.yml
+
+- ansible.builtin.import_tasks: users.yml
+
+- ansible.builtin.import_tasks: sudo.yml
+
+- ansible.builtin.import_tasks: ssh.yml
+
+- ansible.builtin.import_tasks: modules.yml
+
+- ansible.builtin.import_tasks: sysctl.yml
+
+- ansible.builtin.import_tasks: limits.yml
+
+- ansible.builtin.import_tasks: swap.yml

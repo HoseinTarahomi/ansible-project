@@ -1,0 +1,23 @@
+---
+- name: Configure Bare Metal Ubuntu
+  hosts: baremetal
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: common
+      tags:
+        - common
+
+    - role: docker
+      tags:
+        - docker
+
+    - role: traefik
+      tags:
+        - traefik
+
+    - role: nexus
+      tags:
+        - nexus
+

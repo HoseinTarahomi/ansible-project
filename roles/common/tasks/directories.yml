@@ -1,0 +1,12 @@
+---
+- name: Create application directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ docker_root_dir }}"
+    - "{{ traefik_dir }}"
+    - "{{ nexus_dir }}"

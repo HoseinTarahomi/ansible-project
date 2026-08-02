@@ -1,0 +1,19 @@
+# Ansible Vault password files
+.vault_pass
+.vault_pass.txt
+*.vault_pass
+
+# Ansible temporary files
+*.retry
+*.tmp
+*.bak
+*.swp
+
+# Python virtual environments
+.venv/
+venv/
+
+# OS and editor files
+.DS_Store
+.vscode/
+.idea/

@@ -1,0 +1,26 @@
+---
+- name: Verify Traefik directory exists
+  ansible.builtin.stat:
+    path: "{{ traefik_dir }}"
+  register: traefik_directory
+
+- name: Fail if Traefik directory does not exist
+  ansible.builtin.fail:
+    msg: "Traefik directory {{ traefik_dir }} does not exist."
+  when: not traefik_directory.stat.exists
+
+- name: Deploy Traefik
+  community.docker.docker_compose_v2:
+    project_src: "{{ traefik_dir }}"
+    state: present
+
+- name: Wait for Traefik health endpoint
+  ansible.builtin.uri:
+    url: "{{ traefik_healthcheck_url }}"
+    method: GET
+    status_code: "{{ traefik_healthcheck_status_code }}"
+    return_content: false
+  register: traefik_health
+  retries: "{{ traefik_healthcheck_retries }}"
+  delay: "{{ traefik_healthcheck_delay }}"
+  until: traefik_health.status == traefik_healthcheck_status_code

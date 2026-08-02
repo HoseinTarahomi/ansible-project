@@ -1,0 +1,7 @@
+[baremetal]
+
+ubuntu2 ansible_host=192.168.208.159
+
+[baremetal:vars]
+
+ansible_user=ht22
