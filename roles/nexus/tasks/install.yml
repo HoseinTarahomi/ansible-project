@@ -20,4 +20,5 @@
   community.docker.docker_compose_v2:
     project_src: "{{ nexus_dir }}"
     state: present
-    pull: always
+    pull: missing
+    recreate: always

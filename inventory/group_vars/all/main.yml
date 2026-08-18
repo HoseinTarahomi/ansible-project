@@ -44,7 +44,7 @@ ssh_port: 22
 
 ssh_permit_root_login: "no"
 
-ssh_password_authentication: "yes"
+ssh_password_authentication: "no"
 
 ssh_pubkey_authentication: "yes"
 
@@ -136,12 +136,11 @@ docker_ubuntu_repo_codename: noble
 
 docker_data_root: /var/lib/docker
 
-docker_registry_mirror: "http://192.168.208.159:8084"
-
 docker_log_max_size: "100m"
 
 docker_log_max_file: "5"
 
+docker_registry_mirror: "http://192.168.208.159:8084"
 
 # ==========================
 # Nexus
@@ -196,7 +195,39 @@ docker_networks:
 docker_proxy_network: proxy
 
 # ==========================
-# Traefik / Let's Encrypt
+# Traefik TLS (Manual Cert)
 # ==========================
 
-traefik_acme_email: "ali.tohi9090@gmail.com"
+traefik_enable_tls: true
+
+# مسیر فایل‌های گواهی دستی در سرور
+traefik_tls_cert_file: "/etc/letsencrypt/live/{{ nexus_domain }}/fullchain.pem"
+traefik_tls_key_file: "/etc/letsencrypt/live/{{ nexus_domain }}/privkey.pem"
+
+# ==========================
+# Docker Registry
+# ==========================
+
+docker_insecure_registries:
+  - "192.168.208.159:8084"
+
+nexus_registry_url: "192.168.208.159:8084"
+
+# ==========================
+# Domain Settings
+# ==========================
+registry_domain: "registry.ht22.ir"
+
+# پورت مربوط به Docker Group/Hosted Registry در Nexus
+nexus_docker_repo_port: 8084
+
+
+# ==========================
+# Email
+# =========================
+
+smtp_smarthost: "{{ vault_smtp_smarthost }}"
+smtp_from: "{{ vault_smtp_from }}"
+smtp_auth_username: "{{ vault_smtp_auth_username }}"
+smtp_auth_password: "{{ vault_smtp_auth_password }}"
+email_to: "{{ vault_email_to }}"

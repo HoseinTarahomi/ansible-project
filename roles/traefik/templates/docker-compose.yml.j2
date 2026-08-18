@@ -1,28 +1,29 @@
 services:
-  {{ traefik_container_name }}:
-    image: "{{ traefik_image }}"
-    container_name: "{{ traefik_container_name }}"
-
-    restart: "{{ traefik_container_restart }}"
-
+  traefik:
+    image: traefik:v3.6
+    container_name: traefik
+    restart: always
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=proxy"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--providers.file.filename=/etc/traefik/dynamic_conf.yml"
+      - "--providers.file.watch=true"
     ports:
-      - "{{ traefik_http_port }}:80"
-      - "{{ traefik_https_port }}:443"
-      - "{{ traefik_dashboard_port }}:8080"
-
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
     volumes:
-      - "{{ traefik_config_file }}:/etc/traefik/traefik.yml:ro"
-      - "{{ traefik_dynamic_dir }}:/etc/traefik/dynamic:ro"
-      - "{{ traefik_acme_file }}:/etc/traefik/acme.json"
-      - "{{ traefik_docker_socket }}:/var/run/docker.sock:ro"
-      - "/etc/letsencrypt:/etc/letsencrypt:ro"
-
-    environment:
-      TZ: "{{ timezone }}"
-
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/letsencrypt/archive/ht22.ir/fullchain1.pem:/etc/traefik/certs/fullchain.pem:ro
+      - /etc/letsencrypt/archive/ht22.ir/privkey1.pem:/etc/traefik/certs/privkey.pem:ro
+      - /opt/traefik/dynamic_conf.yml:/etc/traefik/dynamic_conf.yml:ro
     networks:
-      - "{{ traefik_network }}"
+      - proxy
 
 networks:
-  "{{ traefik_network }}":
+  proxy:
     external: true

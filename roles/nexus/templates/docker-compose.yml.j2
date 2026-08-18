@@ -1,34 +1,43 @@
 services:
   nexus:
-    image: "{{ nexus_image }}"
-    container_name: "{{ nexus_container_name }}"
-    restart: "{{ nexus_restart_policy }}"
-
+    image: {{ nexus_image | default('sonatype/nexus3:latest') }}
+    container_name: {{ nexus_container_name | default('nexus') }}
+    restart: {{ nexus_restart_policy | default('always') }}
     environment:
-      TZ: "{{ nexus_timezone }}"
-
+      - INSTALL4J_ADD_VM_PARAMS=-Xms512m -Xmx1024m -XX:MaxDirectMemorySize=512m
+    networks:
+      - {{ traefik_network | default('proxy') }}
+    ports:
+      - "8081:8081"
+      - "8082:8082"
+      - "8083:8083"
+      - "8084:8084"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/service/rest/v1/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     volumes:
       - "{{ nexus_data_dir }}:/nexus-data"
-
-    ports:
-      - "{{ nexus_http_port }}:8081"
-      - "{{ nexus_docker_hosted_port }}:8082"
-      - "{{ nexus_docker_proxy_port }}:8083"
-      - "{{ nexus_docker_group_port }}:8084"
-
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network={{ nexus_network }}"
+      - "traefik.docker.network={{ traefik_network | default('proxy') }}"
 
+      # 1. Nexus Web UI (Port 8081)
       - "traefik.http.routers.nexus.rule=Host(`{{ nexus_domain }}`)"
       - "traefik.http.routers.nexus.entrypoints=websecure"
       - "traefik.http.routers.nexus.tls=true"
-
+      - "traefik.http.routers.nexus.service=nexus"                        # <--- اتصال صریح روتر به سرویس
       - "traefik.http.services.nexus.loadbalancer.server.port=8081"
 
-    networks:
-      - "{{ nexus_network }}"
+      # 2. Nexus Docker Registry (Port 8084)
+      - "traefik.http.routers.nexus-registry.rule=Host(`{{ registry_domain }}`)"
+      - "traefik.http.routers.nexus-registry.entrypoints=websecure"
+      - "traefik.http.routers.nexus-registry.tls=true"
+      - "traefik.http.routers.nexus-registry.service=nexus-registry"    # <--- اتصال صریح روتر به سرویس
+      - "traefik.http.services.nexus-registry.loadbalancer.server.port=8084"
 
 networks:
-  "{{ nexus_network }}":
+  {{ traefik_network | default('proxy') }}:
     external: true

@@ -1,11 +1,32 @@
 ---
-- name: Disable swap immediately
-  ansible.builtin.command:
-    cmd: swapoff -a
-  when: ansible_swaptotal_mb > 0
+- name: Check if Swap file exists
+  stat:
+    path: /swapfile
+  register: swap_file_check
 
-- name: Disable swap permanently in fstab
-  ansible.builtin.replace:
-    path: /etc/fstab
-    regexp: '^([^#].*\s+swap\s+.*)$'
-    replace: '# \1'
+- name: Create Swap file if not exists
+  command: fallocate -l 2G /swapfile
+  when: not swap_file_check.stat.exists
+
+- name: Set correct permissions on Swap file
+  file:
+    path: /swapfile
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Make Swap file
+  command: mkswap /swapfile
+  when: not swap_file_check.stat.exists
+
+- name: Enable Swap file
+  command: swapon /swapfile
+  when: ansible_swaptotal_mb == 0
+
+- name: Add Swap to fstab
+  mount:
+    name: none
+    src: /swapfile
+    fstype: swap
+    opts: sw
+    state: present

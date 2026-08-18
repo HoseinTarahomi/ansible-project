@@ -1,0 +1,36 @@
+---
+- name: Install BorgBackup and prerequisites
+  apt:
+    name:
+      - borgbackup
+      - cron
+    state: present
+    update_cache: no
+
+- name: Ensure backup directory exists
+  file:
+    path: "{{ backup_repo_path | default('/var/backups/borg') }}"
+    state: directory
+    mode: '0700'
+
+- name: Initialize Borg repository if not exists
+  command: >
+    borg init --encryption=repokey {{ backup_repo_path | default('/var/backups/borg') }}
+  environment:
+    BORG_PASSPHRASE: "{{ vault_borg_passphrase | default('BorgSecurePass123!') }}"
+  register: borg_init
+  failed_when: false
+  changed_when: "'Repository already exists' not in borg_init.stderr and borg_init.rc == 0"
+
+- name: Deploy Borg backup script
+  template:
+    src: backup.sh.j2
+    dest: /usr/local/bin/borg-backup.sh
+    mode: '0700'
+
+- name: Schedule daily backup cron job (at 02:00 AM)
+  cron:
+    name: "Daily Borg Backup"
+    hour: "2"
+    minute: "0"
+    job: "/usr/local/bin/borg-backup.sh >> /var/log/borg-backup.log 2>&1"

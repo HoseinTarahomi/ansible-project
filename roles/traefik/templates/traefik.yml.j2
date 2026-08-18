@@ -2,7 +2,8 @@ api:
   dashboard: {{ traefik_api_dashboard | bool | lower }}
   insecure: {{ traefik_api_insecure | bool | lower }}
 
-ping: {}
+ping:
+  entryPoint: "traefik"
 
 log:
   level: "{{ traefik_log_level }}"
@@ -27,6 +28,7 @@ providers:
     directory: "/etc/traefik/dynamic"
     watch: true
 
+{% if traefik_enable_acme | default(false) | bool %}
 certificatesResolvers:
   letsencrypt:
     acme:
@@ -34,3 +36,4 @@ certificatesResolvers:
       storage: "/etc/traefik/acme.json"
       httpChallenge:
         entryPoint: {{ traefik_entrypoint_http }}
+{% endif %}

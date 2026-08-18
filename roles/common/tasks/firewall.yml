@@ -1,0 +1,22 @@
+---
+- name: Install UFW package
+  apt:
+    name: ufw
+    state: present
+    update_cache: no
+
+- name: Allow essential ports in UFW
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop:
+    - '22'
+    - '80'
+    - '443'
+
+- name: Enable UFW firewall with default deny incoming
+  ufw:
+    state: enabled
+    policy: deny
+    direction: incoming

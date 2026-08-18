@@ -25,14 +25,26 @@
     group: "{{ traefik_group }}"
     mode: "0644"
 
+# دادن دسترسی خواندن فایل‌های Certbot به Traefik
+- name: Ensure Traefik can read Certbot certificates
+  ansible.builtin.file:
+    path: "{{ item }}"
+    mode: '0755'
+  loop:
+    - /etc/letsencrypt/live
+    - /etc/letsencrypt/archive
+  when: traefik_enable_tls | default(false) | bool
+
+# ساخت فایل TLS در مسیر صحیح (/etc/traefik/dynamic/tls.yml)
 - name: Create dynamic TLS file
   ansible.builtin.copy:
     content: |
       tls:
         certificates:
-          - certFile: /etc/letsencrypt/live/nexus.ht22.ir/fullchain.pem
-            keyFile: /etc/letsencrypt/live/nexus.ht22.ir/privkey.pem
-    dest: "{{ traefik_dynamic_tls_file }}"
+          - certFile: "/etc/letsencrypt/live/nexus.ht22.ir/fullchain.pem"
+            keyFile: "/etc/letsencrypt/live/nexus.ht22.ir/privkey.pem"
+    dest: "{{ traefik_dynamic_dir | default('/etc/traefik/dynamic') }}/tls.yml"
     owner: "{{ traefik_user }}"
     group: "{{ traefik_group }}"
     mode: "0644"
+  notify: Restart Traefik

@@ -1,5 +1,4 @@
 
-- import_tasks: packages.yml
 
 - import_tasks: hostname.yml
 
@@ -20,3 +19,21 @@
 - ansible.builtin.import_tasks: limits.yml
 
 - ansible.builtin.import_tasks: swap.yml
+
+- ansible.builtin.include_tasks: firewall.yml
+
+- name: Allow essential ports in UFW
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop:
+    - '22'
+    - '80'
+    - '443'
+
+- name: Enable UFW firewall with default deny incoming
+  ufw:
+    state: enabled
+    policy: deny
+    direction: incoming

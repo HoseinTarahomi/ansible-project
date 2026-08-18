@@ -1,0 +1,118 @@
+---
+- name: Ensure monitoring stack directory exists
+  ansible.builtin.file:
+    path: /opt/monitoring
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Ensure provisioning and dashboards directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - /opt/monitoring/provisioning
+    - /opt/monitoring/provisioning/datasources
+    - /opt/monitoring/provisioning/dashboards
+    - /opt/monitoring/dashboards
+
+- name: Deploy Prometheus configuration template
+  ansible.builtin.template:
+    src: prometheus.yml.j2
+    dest: /opt/monitoring/prometheus.yml
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart monitoring stack
+
+- name: Deploy Prometheus alert rules template
+  ansible.builtin.template:
+    src: alert.rules.yml.j2
+    dest: /opt/monitoring/alert.rules.yml
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart monitoring stack
+
+- name: Deploy Alertmanager configuration template
+  ansible.builtin.template:
+    src: alertmanager.yml.j2
+    dest: /opt/monitoring/alertmanager.yml
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart monitoring stack
+
+- name: Deploy Loki configuration template
+  ansible.builtin.template:
+    src: loki-config.yml.j2
+    dest: /opt/monitoring/loki-config.yml
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart monitoring stack
+
+- name: Deploy Promtail configuration template
+  ansible.builtin.template:
+    src: promtail-config.yml.j2
+    dest: /opt/monitoring/promtail-config.yml
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart monitoring stack
+
+- name: Deploy Grafana datasources provisioning configuration
+  ansible.builtin.template:
+    src: grafana_datasources.yml.j2
+    dest: /opt/monitoring/provisioning/datasources/datasources.yml
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart monitoring stack
+
+- name: Deploy Grafana dashboards provisioning configuration
+  ansible.builtin.template:
+    src: grafana_dashboards.yml.j2
+    dest: /opt/monitoring/provisioning/dashboards/dashboards.yml
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart monitoring stack
+
+- name: Download Node Exporter Full dashboard JSON
+  ansible.builtin.get_url:
+    url: https://grafana.com/api/dashboards/1860/revisions/37/download
+    dest: /opt/monitoring/dashboards/node_exporter_raw.json
+    mode: '0644'
+  register: download_dashboard
+
+- name: Sanitize Node Exporter dashboard JSON using jq
+  ansible.builtin.shell: >
+    jq '
+      .id = null |
+      walk(if type == "object" and has("datasource") then
+        if .datasource == "${DS_PROMETHEUS}" or .datasource == "Prometheus" then
+          .datasource = "Prometheus"
+        else . end
+      else . end) |
+      walk(if type == "object" then del(.deprecatedInternalID) else . end)
+    ' /opt/monitoring/dashboards/node_exporter_raw.json > /opt/monitoring/dashboards/node_exporter.json
+  when: download_dashboard.changed
+
+- name: Deploy Monitoring Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: /opt/monitoring/docker-compose.yml
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart monitoring stack
+
+- name: Ensure Monitoring stack is running
+  community.docker.docker_compose_v2:
+    project_src: /opt/monitoring
+    state: present

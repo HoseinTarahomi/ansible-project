@@ -1,0 +1,46 @@
+groups:
+  - name: infrastructure_alerts
+    rules:
+      - alert: InstanceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          {% raw %}
+          summary: "Instance {{ $labels.instance }} down"
+          description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 1 minute."
+          {% endraw %}
+
+      - alert: HighCpuLoad
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100) > 85
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          {% raw %}
+          summary: "High CPU Load on {{ $labels.instance }}"
+          description: "CPU load is above 85% for 2 minutes."
+          {% endraw %}
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 90
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          {% raw %}
+          summary: "High Memory Usage on {{ $labels.instance }}"
+          description: "RAM usage is above 90% for 2 minutes."
+          {% endraw %}
+
+      - alert: DiskSpaceRunningLow
+        expr: (node_filesystem_size_bytes{mountpoint="/"}-node_filesystem_free_bytes{mountpoint="/"}) / node_filesystem_size_bytes{mountpoint="/"} * 100 > 85
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          {% raw %}
+          summary: "Low Disk Space on {{ $labels.instance }}"
+          description: "Root partition disk usage is above 85%."
+          {% endraw %}

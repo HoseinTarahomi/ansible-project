@@ -1,0 +1,21 @@
+#!/bin/bash
+set -e
+
+REPOSITORY="{{ backup_repo_path | default('/var/backups/borg') }}"
+export BORG_PASSPHRASE="{{ vault_borg_passphrase | default('BorgSecurePass123!') }}"
+
+echo "=== Starting Borg Backup: $(date) ==="
+
+borg create --stats --progress \
+    $REPOSITORY::'backup-{now:%Y-%m-%d-%H%M%S}' \
+    /opt/monitoring \
+    /etc/traefik \
+    /var/lib/docker/volumes
+
+echo "=== Pruning old backups ==="
+borg prune -v --list $REPOSITORY \
+    --keep-daily=7 \
+    --keep-weekly=4 \
+    --keep-monthly=6
+
+echo "=== Backup Completed Successfully ==="
