@@ -10,7 +10,7 @@
 
 **یک زیرساخت عملیاتی، خودکار و امن مبتنی بر Ansible برای راه‌اندازی و مدیریت سرورهای Bare Metal Ubuntu.**
 
-[معماری و جزئیات فنی](docs/PROJECT_CONTEXT.md) • [نقشه راه پروژه](docs/ROADMAP.md)
+[معماری و جزئیات فنی](docs/PROJECT_CONTEXT.md) • [نقشه راه پروژه](docs/ROADMAP.md) • [دیاگرام معماری](docs/ARCHITECTURE.md)
 
 </div>
 
@@ -22,32 +22,31 @@
 
 ### 🏗️ معماری زیرساخت
 
-* Control Node (ubuntu1): سرور مدیریت و اجرای Playbookهای انسیبل.
-* Target Node (ubuntu2 / ubuntu3): سرور اصلی پروداکشن میزبان کانتینرها روی شبکه ایزوله proxy.
+* **Control Node (ubuntu1):** سرور مدیریت و اجرای Playbookهای انسیبل.
+* **Target Node (ubuntu2 / ubuntu3):** سرور اصلی پروداکشن میزبان کانتینرها روی شبکه ایزوله proxy.
 
 ---
 
 ## 🛠️ سرویس‌ها و پشته فناوری
 
-| سرویس | آدرس وب / دامنه | پورت داخلی | کاربرد |
+| سرویس | آدرس وب / دسترسی | پورت داخلی | کاربرد |
 | :--- | :--- | :--- | :--- |
-| Traefik v3 | https://traefik.ht22.ir | 8080 | Reverse Proxy با دریافت خودکار SSL (Let's Encrypt) |
-| Sonatype Nexus 3 | https://nexus.ht22.ir | 8081 | مدیریت Artifactها و کش پکیج‌ها |
-| Docker Registry | https://registry.ht22.ir | 8084 | Private Docker Registry (Hosted + Proxy Group) |
-| Grafana | https://grafana.ht22.ir | 3000 | داشبورد یکپارچه مانیتورینگ و مشاهده لاگ‌ها |
-| Prometheus | https://prometheus.ht22.ir | 9090 | جمع‌آوری و ذخیره‌سازی Metricها |
-| Alertmanager | https://alertmanager.ht22.ir | 9093 | مدیریت و ارسال هشدارهای سیستم |
-| Loki & Promtail | سرویس داخلی | 3100 | مدیریت و متمرکزسازی لاگ‌های لینوکس و داکر |
+| **Sonatype Nexus 3** | https://nexus.ht22.ir | 8081 | مدیریت Artifactها، کش پکیج‌ها و Docker Registry |
+| **Grafana** | https://grafana.ht22.ir | 3000 | داشبورد یکپارچه مانیتورینگ و مشاهده لاگ‌ها |
+| **Traefik v3** | سرویس داخلی (Internal Proxy) | 8080 | Reverse Proxy و مدیریت گواهی‌های SSL |
+| **Prometheus** | سرویس داخلی (Internal Metrics) | 9090 | جمع‌آوری و ذخیره‌سازی Metricها |
+| **Alertmanager** | سرویس داخلی (Internal Alerting) | 9093 | مدیریت و ارسال هشدارهای سیستم |
+| **Loki & Promtail** | سرویس داخلی (Internal Logging) | 3100 | مدیریت و متمرکزسازی لاگ‌های لینوکس و داکر |
 
 ---
 
 ## 📂 ساختار رول‌های Ansible
 
-* common: تنظیمات لینوکس، Swap، پارامترهای کرنل و UFW Firewall
-* traefik: راه‌اندازی Traefik v3 و شبکه سراسری proxy
-* nexus: نصب Nexus 3 و پیکربندی خودکار Docker Repositories
-* monitoring: پشته مانیتورینگ (Prometheus, Grafana, Alertmanager, Loki, Promtail)
-* backup: ابزار BorgBackup، اسکریپت‌های خودکار و Cron Job روزانه
+* **common:** تنظیمات لینوکس، Swap، پارامترهای کرنل و UFW Firewall
+* **traefik:** راه‌اندازی Traefik v3 و شبکه سراسری proxy
+* **nexus:** نصب Nexus 3 و پیکربندی خودکار Docker Repositories
+* **monitoring:** پشته مانیتورینگ (Prometheus, Grafana, Alertmanager, Loki, Promtail)
+* **backup:** ابزار BorgBackup، اسکریپت‌های خودکار و Cron Job روزانه
 
 ---
 
@@ -55,45 +54,56 @@
 
 ### ۱. پیش‌نیازهای اجرای پروژه روی سرور جدید
 
-قبل از اجرای Playbook روی یک سرور جدید، موارد زیر باید مهیا باشند:
+قبل از اجرای Playbook روی یک سرور جدید (مانند ubuntu3 یا IP جدید)، موارد زیر باید مهیا باشند:
 
 * **نصب Ansible:** نسخه 2.15 یا بالاتر روی Control Node.
 * **پیش‌نیاز سرور مقصد (Target):** نصب بودن Python 3 روی سرور جدید.
-* **دسترسی SSH بدون پسورد:** کپی کردن SSH Key از Control Node به سرور مقصد (ssh-copy-id).
+* **دسترسی SSH بدون پسورد:** کپی کردن SSH Key از Control Node به سرور مقصد ().
 * **دسترسی Sudo:** داشتن دسترسی Root یا کاربر با قابلیت sudo بدون پسورد در سرور مقصد.
-* **تنظیمات Inventory:** به‌روزرسانی IP سرور مقصد در فایل inventory/hosts.
+* **تنظیمات Inventory:** به‌روزرسانی IP سرور مقصد در فایل .
 
 تست اتصال SSH و Ansible پیش از اجرا:
+```bash
 ansible all -i inventory/hosts -m ping
+```
 
 ### ۲. اجرا و استقرار زیرساخت
 
 کلون کردن پروژه:
+```bash
 git clone https://github.com/HoseinTarahomi/ansible-project.git
 cd ansible-project
+```
 
 اجرای کامل Playbook:
+```bash
 ansible-playbook -i inventory/hosts playbooks/site.yml --ask-vault-pass
+```
 
 ### ۳. اجرای رول‌های خاص (Tag-based Execution)
 
 اجرای فقط رول مانیتورینگ:
+```bash
 ansible-playbook -i inventory/hosts playbooks/site.yml --tags "monitoring" --ask-vault-pass
+```
 
 اجرای رول فایروال و امنیت:
+```bash
 ansible-playbook -i inventory/hosts playbooks/site.yml --tags "common" --ask-vault-pass
+```
 
 ---
 
 ## ⚙️ امنیت و پشتیبان‌گیری
 
-* UFW Firewall: تمام پورت‌های ورودی مسدود شده و تنها پورت‌های 22 (SSH)، 80 (HTTP) و 443 (HTTPS) مجاز هستند.
-* BorgBackup: فرآیند پشتیبان‌گیری خودکار هر روز ساعت ۰۲:۰۰ بامداد به صورت رمزنگاری‌شده اجرا شده و دارای سیاست نگهداری (Retention) ۷ روزه، ۴ هفتگی و ۶ ماهه است.
+* **UFW Firewall:** تمام پورت‌های ورودی مسدود شده و تنها پورت‌های 22 (SSH)، 80 (HTTP) و 443 (HTTPS) مجاز هستند.
+* **BorgBackup:** فرآیند پشتیبان‌گیری خودکار هر روز ساعت ۰۲:۰۰ بامداد به صورت رمزنگاری‌شده اجرا شده و دارای سیاست نگهداری (Retention) ۷ روزه، ۴ هفتگی و ۶ ماهه است.
 
 ---
 
 ## 📚 مستندات تکمیلی
 
 برای اطلاعات دقیق‌تر درباره متغیرها، معماری شبکه و نقشه راه، مستندات زیر را مطالعه کنید:
-* PROJECT_CONTEXT.md (در دایرکتوری docs): شرح تفصیلی معماری و دستورات عیب‌یابی.
-* ROADMAP.md (در دایرکتوری docs): وضعیت فازهای طی‌شده و برنامه‌های آینده.
+* **[PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md):** شرح تفصیلی معماری و دستورات عیب‌یابی.
+* **[ARCHITECTURE.md](docs/ARCHITECTURE.md):** دیاگرام گرافیکی و نحوه تعامل اجزای شبکه.
+* **[ROADMAP.md](docs/ROADMAP.md):** وضعیت فازهای طی‌شده و برنامه‌های آینده.

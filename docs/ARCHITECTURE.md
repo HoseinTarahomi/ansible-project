@@ -8,21 +8,20 @@
 
 ```mermaid
 graph TD
-    Users[👥 Users / Internet] -->|HTTPS 443 / HTTP 80| Firewall[🛡️ UFW Firewall]
+    Users[👥 External Users / Traffic] -->|HTTPS 443 / HTTP 80| Firewall[🛡️ UFW Firewall]
 
     subgraph ToolsServer["🖥️ Target Server (Tools-Server)"]
         Firewall --> Traefik[🚦 Traefik v3 Reverse Proxy]
 
         subgraph DockerNetwork["🔒 Docker Isolated Network (proxy)"]
             Traefik -->|nexus.ht22.ir| Nexus[📦 Sonatype Nexus 3]
-            Traefik -->|registry.ht22.ir| Registry[🐳 Docker Private Registry]
-            Traefik -->|grafana.ht22.ir| Grafana[📊 Grafana]
-            Traefik -->|prometheus.ht22.ir| Prometheus[📈 Prometheus]
-            Traefik -->|alertmanager.ht22.ir| Alertmanager[🔔 Alertmanager]
-            Traefik -->|traefik.ht22.ir| Dash[🎛️ Traefik Dashboard]
-
+            Traefik -->|grafana.ht22.ir| Grafana[📊 Grafana Dashboard]
+            
+            Prometheus[📈 Prometheus] -->|Internal Scrape| NodeExporter[🖥️ Node Exporter]
             Promtail[📜 Promtail] -->|Push Logs| Loki[🗄️ Grafana Loki]
-            Prometheus -->|Scrape Metrics| NodeExporter[🖥️ Node Exporter]
+            Prometheus -->|Internal Alerting| Alertmanager[🔔 Alertmanager]
+            Grafana -->|Query Metrics| Prometheus
+            Grafana -->|Query Logs| Loki
         end
 
         Cron[⏰ Daily Cron Job 02:00] -->|Backup Volumes| Borg[💾 BorgBackup Script]
@@ -38,9 +37,6 @@ graph TD
 
 ## 🔍 شرح جریان ترافیک و اجزا
 
-1. **لایه ورودی (Ingress):** تمام درخواست‌های کاربران ابتدا به UFW Firewall رسیده و تنها پورت‌های 80 و 443 به سمت Traefik هدایت می‌شوند.
-2. **لایه Reverse Proxy:** سرویس Traefik به صورت هوشمند و بر اساس SNI/Host Header، ترافیک را به کانتینر مربوطه در شبکه ایزوله proxy هدایت می‌کند.
-3. **لایه مانیتورینگ و لاگینگ:**
-   - Prometheus: اطلاعات متریك سیستم و کانتینرها را جمع‌آوری می‌کند.
-   - Promtail & Loki: لاگ‌های متنی سیستم‌عامل و تمام کانتینرها را جمع‌آوری و برای نمایش به Grafana می‌فرستد.
-4. **لایه مدیریت و اتوماسیون:** سرور ubuntu1 از طریق SSH و کلید امنیتی، تغییرات و رول‌های انسیبل را روی Target اجرا می‌کند.
+1. **لایه ورودی (Ingress):** تنها درخواست‌های مربوط به دامنه‌های عمومی ( و ) از طریق پورت‌های 80/443 توسط Traefik هدایت می‌شوند.
+2. **لایه سرویس‌های داخلی:** سایر سرویس‌ها (Prometheus، Alertmanager، Loki) دامنه‌ی عمومی نداشته و فقط به عنوان سرویس‌های داخلی در شبکه ایزوله داکر به یکدیگر و به Grafana پاسخ می‌دهند.
+3. **لایه مدیریت و اتوماسیون:** سرور  از طریق SSH و کلید امنیتی، پیکربندی‌ها را روی سرور مقصد اعمال می‌کند.
